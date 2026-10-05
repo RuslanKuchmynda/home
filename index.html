@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Home</title>
+<style>
+  :root {
+    --paper: #f4f1e6;
+    --paper-deep: #eae5d5;
+    --ink: #1a1812;
+    --ink-soft: #5c5647;
+    --line: #d8d2bf;
+    --accent: #2f3df0;
+    --accent-ink: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100dvh;
+    padding: 0 28px 40px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .top {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 24px; padding: 56px 0 8px; flex-wrap: wrap;
+  }
+  .clock { font-family: Georgia, "Times New Roman", serif; font-weight: 400; }
+  .clock .time { font-size: clamp(64px, 12vw, 132px); line-height: 0.95; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .clock .date { font-size: clamp(15px, 2.4vw, 20px); margin-top: 10px; color: var(--ink-soft); }
+  .clock .date strong { color: var(--ink); font-weight: 600; }
+  .meta { display: flex; align-items: center; gap: 14px; margin-top: 10px; font-size: 13.5px; color: var(--ink-soft); flex-wrap: wrap; }
+  .meta .w { display: inline-flex; align-items: center; gap: 6px; }
+  .meta .w b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .meta .tz b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .meta button.linklike { background: none; border: none; cursor: pointer; color: var(--ink-soft); font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; padding: 0; }
+  .meta button.linklike:hover { color: var(--accent); }
+  .search { flex: 1 1 280px; max-width: 420px; padding-bottom: 10px; }
+  .search form { display: flex; border-bottom: 2px solid var(--ink); }
+  .search input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-size: 17px; padding: 10px 2px; color: var(--ink); min-width: 0;
+  }
+  .search input::placeholder { color: var(--ink-soft); opacity: 0.7; }
+  .search button {
+    background: none; border: none; cursor: pointer;
+    font-size: 15px; color: var(--ink); padding: 0 2px 0 12px; white-space: nowrap;
+  }
+  .search button:hover { color: var(--accent); }
+  .hint { font-size: 12.5px; color: var(--ink-soft); margin-top: 8px; }
+  .hint b { display: inline-block; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 0 6px; font-weight: 600; background: var(--paper-deep); }
+  main { display: grid; gap: 0; margin-top: 24px; border-top: 2px solid var(--ink); }
+  section.group { display: grid; grid-template-columns: 170px 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .group-name { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding-top: 4px; }
+  .group-name h2 { font-size: 14px; font-weight: 600; }
+  .group-name h2 small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--ink);
+    padding: 6px 8px; border-radius: 9px; margin: 0 -8px; min-width: 0;
+  }
+  .row:hover { background: var(--paper-deep); }
+  .row:hover .go { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .idx {
+    font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums;
+    border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; background: var(--paper);
+    flex-shrink: 0; transform: translateY(-1px);
+  }
+  .row .title { font-size: 14.5px; font-weight: 550; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .host { margin-left: auto; font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 38%; }
+  .row .go {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    border: 1px solid var(--line); display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--ink-soft); align-self: center;
+  }
+  .row .x {
+    flex-shrink: 0; background: none; border: none; cursor: pointer; color: var(--ink-soft);
+    font-size: 13px; opacity: 0; padding: 4px; align-self: center;
+  }
+  .row:hover .x, .row:focus-within .x { opacity: 1; }
+  .row .x:hover { color: #c0362c; }
+  .mini-btn {
+    background: none; border: 1px solid transparent; cursor: pointer; color: var(--ink-soft);
+    font-size: 14px; line-height: 1; padding: 5px 9px; border-radius: 8px; flex-shrink: 0;
+  }
+  .mini-btn:hover { color: var(--ink); background: var(--paper-deep); border-color: var(--line); }
+  footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+  footer p { font-size: 12.5px; color: var(--ink-soft); max-width: 60ch; }
+  .actions { display: flex; gap: 8px; }
+  .btn {
+    font-size: 13.5px; font-weight: 600; padding: 9px 16px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  }
+  .btn.plain { background: transparent; color: var(--ink); }
+  .btn.plain:hover { background: var(--paper-deep); }
+  dialog { border: 1px solid var(--line); border-radius: 16px; padding: 22px; width: min(430px, calc(100vw - 48px)); background: var(--paper); color: var(--ink); margin: auto; }
+  dialog::backdrop { background: rgba(26, 24, 18, 0.45); }
+  dialog h3 { font-size: 17px; margin-bottom: 6px; letter-spacing: -0.01em; }
+  dialog label { display: block; font-size: 12.5px; color: var(--ink-soft); margin: 12px 0 5px; }
+  dialog input, dialog select {
+    width: 100%; background: #fff; border: 1px solid var(--line); color: var(--ink);
+    border-radius: 10px; padding: 10px 12px; font-size: 14.5px;
+  }
+  dialog .row2 { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  @media (max-width: 640px) {
+    body { padding: 0 18px 32px; }
+    .top { padding-top: 36px; }
+    section.group { grid-template-columns: 1fr; gap: 6px; }
+    .row .host { display: none; }
+    footer p { max-width: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="clock">
+      <div class="time" id="time">--:--</div>
+      <div class="date" id="date"></div>
+      <div class="meta">
+        <span class="w" id="weather">…</span>
+        <span class="tz" id="tz2"></span>
+        <button class="linklike" id="locSettings">clocks & weather</button>
+      </div>
+    </div>
+    <div class="search">
+      <form id="searchForm" action="https://www.google.com/search" method="get">
+        <input id="q" name="q" type="search" placeholder="Search Google…" autocomplete="off" />
+        <button type="submit">Search</button>
+      </form>
+      <p class="hint">press <b>1</b>–<b>9</b> to open a link • right-click to edit</p>
+    </div>
+  </div>
+
+  <main id="groups"></main>
+
+  <footer>
+    <div class="actions" style="margin-left:auto">
+      <button class="btn plain" id="addLink">Add link</button>
+      <button class="btn" id="addGroup">Add group</button>
+    </div>
+  </footer>
+</div>
+
+<dialog id="dlg">
+  <h3 id="dlgTitle"></h3>
+  <div id="dlgBody"></div>
+  <div class="row2">
+    <button class="btn plain" id="dlgDel" hidden>Delete</button>
+    <span style="flex:1"></span>
+    <button class="btn plain" id="dlgCancel">Cancel</button>
+    <button class="btn" id="dlgOk">Save</button>
+  </div>
+</dialog>
+
+<script>
+const KEY = "tutorly-home-v1";
+const SEED = [
+  { name: "Launch", note: "daily start", links: [
+    { title: "Work app", url: "https://app.tutorly.study" },
+    { title: "Local app", url: "http://localhost:5173" },
+    { title: "Mail", url: "https://mail.google.com" },
+    { title: "Calendar", url: "https://calendar.google.com" },
+  ]},
+  { name: "Project", note: "tutorly.study", links: [
+    { title: "Landing", url: "https://tutorly.study" },
+    { title: "GitHub", url: "https://github.com/RuslanKuchmynda/Tutorly" },
+    { title: "Hetzner", url: "https://console.hetzner.cloud" },
+  ]},
+  { name: "Read", note: "when there is a minute", links: [
+    { title: "Hacker News", url: "https://news.ycombinator.com" },
+  ]},
+];
+
+let state;
+try { state = JSON.parse(localStorage.getItem(KEY)) || null; } catch { state = null; }
+if (!state || !Array.isArray(state)) { state = SEED; save(); }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} }
+
+const main = document.getElementById("groups");
+let flat = [];
+function render() {
+  main.innerHTML = "";
+  flat = [];
+  state.forEach((g, gi) => {
+    const sec = document.createElement("section");
+    sec.className = "group";
+    const head = document.createElement("div");
+    head.className = "group-name";
+    const h = document.createElement("h2");
+    h.textContent = g.name;
+    if (g.note) {
+      const s = document.createElement("small");
+      s.textContent = g.note;
+      h.append(s);
+    }
+    const del = document.createElement("button");
+    del.className = "mini-btn";
+    del.textContent = "✕";
+    del.title = "Delete group";
+    del.onclick = () => { if (confirm(`Delete group "${g.name}?"`)) { state.splice(gi, 1); save(); render(); } };
+    const add = document.createElement("button");
+    add.className = "mini-btn";
+    add.textContent = "+";
+    add.title = "Add link to this group";
+    add.onclick = () => {
+      openDialog("New link", [
+        ["text", "Name", ""],
+        ["text", "URL", "https://"],
+      ], ([title, url]) => {
+        if (!title || !url) return;
+        g.links.push({ title, url });
+        save(); render();
+      });
+    };
+    const hw = document.createElement("div");
+    hw.append(h);
+    const tools = document.createElement("div");
+    tools.style.display = "flex";
+    tools.style.gap = "2px";
+    tools.append(add, del);
+    head.append(hw, tools);
+    const rows = document.createElement("div");
+    rows.className = "rows";
+    g.links.forEach((l) => {
+      const idx = flat.length;
+      flat.push(l.url);
+      const a = document.createElement("a");
+      a.className = "row";
+      a.href = l.url;
+      const num = document.createElement("span");
+      num.className = "idx";
+      num.textContent = idx + 1 <= 9 ? idx + 1 : "·";
+      const title = document.createElement("span");
+      title.className = "title";
+      title.textContent = l.title;
+      const host = document.createElement("span");
+      host.className = "host";
+      try { host.textContent = new URL(l.url).host.replace(/^www\./, ""); } catch { host.textContent = l.url; }
+      const go = document.createElement("span");
+      go.className = "go";
+      go.textContent = "↗";
+      const x = document.createElement("button");
+      x.className = "x";
+      x.textContent = "✎";
+      x.title = "Edit";
+      x.onclick = (e) => { e.preventDefault(); editLink(g, l); };
+      a.append(num, title, host, go, x);
+      a.oncontextmenu = (e) => { e.preventDefault(); editLink(g, l); };
+      rows.append(a);
+    });
+    sec.append(head, rows);
+    main.append(sec);
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const tag = (document.activeElement && document.activeElement.tagName) || "";
+  if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+  if (/^[1-9]$/.test(e.key)) {
+    const url = flat[Number(e.key) - 1];
+    if (url) window.open(url, "_blank", "noopener");
+  }
+  if (e.key === "/") {
+    e.preventDefault();
+    document.getElementById("q").focus();
+  }
+});
+
+const dlg = document.getElementById("dlg");
+const dlgTitle = document.getElementById("dlgTitle");
+const dlgBody = document.getElementById("dlgBody");
+const dlgOk = document.getElementById("dlgOk");
+const dlgDel = document.getElementById("dlgDel");
+let okFn = null;
+document.getElementById("dlgCancel").onclick = () => dlg.close();
+function openDialog(title, fields, onOk, onDel) {
+  dlgTitle.textContent = title;
+  dlgBody.innerHTML = "";
+  const inputs = fields.map(([type, label, val, opts]) => {
+    const lab = document.createElement("label");
+    lab.textContent = label;
+    let inp;
+    if (type === "select") {
+      inp = document.createElement("select");
+      opts.forEach((o) => {
+        const op = document.createElement("option");
+        op.value = o; op.textContent = o;
+        inp.append(op);
+      });
+      inp.value = val;
+    } else {
+      inp = document.createElement("input");
+      inp.value = val || "";
+      inp.placeholder = label;
+    }
+    dlgBody.append(lab, inp);
+    return inp;
+  });
+  okFn = () => onOk(inputs.map((i) => i.value));
+  dlgDel.hidden = !onDel;
+  dlgDel.onclick = () => { dlg.close(); onDel && onDel(); };
+  dlg.showModal();
+  const first = dlgBody.querySelector("input");
+  if (first) { first.focus(); first.select(); }
+}
+dlgOk.onclick = () => { dlg.close(); okFn && okFn(); };
+
+function editLink(g, l) {
+  openDialog("Link", [
+    ["text", "Name", l.title],
+    ["text", "URL", l.url],
+    ["select", "Group", g.name, state.map((x) => x.name)],
+  ], ([title, url, group]) => {
+    if (!title || !url) return;
+    const ng = state.find((x) => x.name === group) || g;
+    if (ng !== g) {
+      g.links.splice(g.links.indexOf(l), 1);
+      ng.links.push({ title, url });
+    } else {
+      l.title = title; l.url = url;
+    }
+    save(); render();
+  }, () => {
+    g.links.splice(g.links.indexOf(l), 1);
+    save(); render();
+  });
+}
+
+document.getElementById("addLink").onclick = () => {
+  if (!state.length) { alert("Create a group first"); return; }
+  const g = state[0];
+  openDialog("New link", [
+    ["text", "Name", ""],
+    ["text", "URL", "https://"],
+    ["select", "Group", g.name, state.map((x) => x.name)],
+  ], ([title, url, group]) => {
+    const ng = state.find((x) => x.name === group) || g;
+    ng.links.push({ title: title || url, url });
+    save(); render();
+  });
+};
+document.getElementById("addGroup").onclick = () => {
+  openDialog("New group", [
+    ["text", "Name", ""],
+    ["text", "Note", ""],
+  ], ([name, note]) => {
+    if (!name) return;
+    state.push({ name, note, links: [] });
+    save(); render();
+  });
+};
+
+function tick() {
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  document.getElementById("time").textContent = `${hh}:${mm}`;
+  const date = d.toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
+  const h = d.getHours();
+  const part = h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  document.getElementById("date").innerHTML = "";
+  const strong = document.createElement("strong");
+  strong.textContent = `${part}. `;
+  document.getElementById("date").append(strong, document.createTextNode(`${date} today.`));
+}
+setInterval(tick, 5000);
+tick();
+render();
+
+// --- weather + second clock (Open-Meteo, keyless) ---
+const CFG_KEY = "tutorly-home-cfg-v1";
+const TZS = [];
+for (let o = -11; o <= 14; o++) TZS.push(o <= 0 ? `GMT${o}` : `GMT+${o}`);
+let cfg;
+try { cfg = JSON.parse(localStorage.getItem(CFG_KEY)) || null; } catch { cfg = null; }
+if (!cfg || cfg.gmt === undefined) {
+  const fromOld = cfg && cfg.tz2 === "America/New_York" ? "-4" : "0";
+  cfg = { city: (cfg && cfg.city) || "Kyiv", lat: (cfg && cfg.lat) || 50.45, lon: (cfg && cfg.lon) || 30.52, gmt: fromOld, gmtLabel: (cfg && cfg.tz2label) || "Client" };
+  saveCfg();
+}
+function saveCfg() { try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch {} }
+const WMO = { 0: "Clear", 1: "Mostly clear", 2: "Partly cloudy", 3: "Overcast", 45: "Fog", 48: "Icy fog", 51: "Light drizzle", 53: "Drizzle", 55: "Heavy drizzle", 61: "Light rain", 63: "Rain", 65: "Heavy rain", 71: "Light snow", 73: "Snow", 75: "Heavy snow", 80: "Showers", 81: "Showers", 82: "Storm", 95: "Thunderstorm", 96: "Storm", 99: "Storm" };
+async function loadWeather() {
+  const el = document.getElementById("weather");
+  try {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${cfg.lat}&longitude=${cfg.lon}&current=temperature_2m,weathercode&timezone=auto`);
+    const j = await r.json();
+    const t = Math.round(j.current.temperature_2m);
+    el.innerHTML = "";
+    const b = document.createElement("b");
+    b.textContent = `${t}°`;
+    el.append(document.createTextNode(`${cfg.city}: `), b, document.createTextNode(` ${WMO[j.current.weathercode] || ""}`));
+  } catch {
+    el.textContent = cfg.city || "";
+  }
+}
+function tickTz() {
+  const el = document.getElementById("tz2");
+  el.style.display = cfg.hidden ? "none" : "";
+  if (cfg.hidden) return;
+  const off = Number(String(cfg.gmt).replace("GMT", ""));
+  if (!Number.isFinite(off)) { el.textContent = ""; return; }
+  const d = new Date(Date.now() + off * 3600000 + new Date().getTimezoneOffset() * 60000);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  el.innerHTML = "";
+  const b = document.createElement("b");
+  b.textContent = `${hh}:${mm}`;
+  el.append(document.createTextNode(`${cfg.gmtLabel} (${cfg.gmt}) `), b);
+}
+setInterval(tickTz, 10000);
+tickTz();
+loadWeather();
+setInterval(loadWeather, 600000);
+document.getElementById("locSettings").onclick = () => {
+  openDialog("Clocks & weather", [
+    ["select", "Second clock", cfg.hidden ? "hidden" : "shown", ["shown", "hidden"]],
+    ["select", "Second clock (GMT)", cfg.gmt, TZS],
+    ["text", "Second clock label", cfg.gmtLabel || "Client"],
+    ["text", "Weather city", cfg.city || "Kyiv"],
+  ], async ([vis, gmt, label, city]) => {
+    cfg.hidden = vis === "hidden";
+    cfg.gmt = gmt;
+    cfg.gmtLabel = label || "Client";
+    if (city && city !== cfg.city) {
+      try {
+        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en`);
+        const j = await r.json();
+        if (j.results && j.results[0]) {
+          cfg.city = j.results[0].name;
+          cfg.lat = j.results[0].latitude;
+          cfg.lon = j.results[0].longitude;
+        }
+      } catch {}
+    }
+    saveCfg(); tickTz(); loadWeather();
+  });
+};
+</script>
+</body>
+</html>
